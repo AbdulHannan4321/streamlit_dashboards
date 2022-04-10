@@ -8,3 +8,5 @@ scikit-learn
 tensorflow
 statsmodels
 scipy
+pandas_profiling
+streamlit_pandas_profiling
