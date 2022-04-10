@@ -1,5 +1,3 @@
-import imp
-from requests import options
 import streamlit as st
 import seaborn as sns
 import pandas as pd
