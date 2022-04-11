@@ -1,9 +1,11 @@
 streamlit
 google_play_scraper
+pandas
+numpy
+plotly
 matplotlib
 seaborn
 nltk
 string
-numpy
-pandas
-nltk.tokenize
+wordcloud
+sklearn
