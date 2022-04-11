@@ -2,24 +2,23 @@ import streamlit as st
 from google_play_scraper import app
 import pandas as pd
 import numpy as np
-# import plotly.express as px
-# import plotly.graph_objects as go
+import plotly.express as px
+import plotly.graph_objects as go
 import matplotlib.pyplot as plt
+import matplotlib_inline
 import seaborn as sns
-# import csv
-#import panel as pl
 import nltk
-# nltk.download('stopwords')
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 import re
-# import unicodedata
-# import unidecode
 import string
-from nltk.stem import WordNetLemmatizer
- 
-lemmatizer = WordNetLemmatizer()
+import wordcloud
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix,classification_report
+lr = LogisticRegression()
 
 
 
@@ -36,6 +35,8 @@ def app_review(x):
     df = pd.DataFrame(np.array(pak_review), columns=['review'])
     df = df.join(pd.DataFrame(df.pop('review').tolist()))
     # st.write(df)
+    
+    # preprocessing
     def remove_punctuation(text):
         punctuationfree="".join([i for i in text if i not in string.punctuation])
         return punctuationfree
@@ -62,8 +63,83 @@ def app_review(x):
         stem_text = [porter_stemmer.stem(word) for word in text]
         return stem_text
     df['msg_stemmed']=df['non_english'].apply(lambda x: stemming(x))
+    # df = df[df['score'] != 3]
+    df['sentiment'] = df['score'].apply(lambda rating : +1 if rating > 3 else -1)
 
+    # Stopwords
+    stopwords = set(STOPWORDS)
+    stopwords.update(["br", "href"])
+    textt = " ".join(review for review in df.content)
+    wordcloud = WordCloud(stopwords=stopwords).generate(textt)
+    plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis("off")
+    sw_plot = plt.show()
+    # plt.savefig('wordcloud11.png')
+
+    positive = df[df['sentiment'] == 1]
+    negative = df[df['sentiment'] == -1]
+
+    stopwords = set(STOPWORDS)
+    stopwords.update(["br", "href","good","great"]) 
+## good and great removed because they were included in negative sentiment
+    # positive stopwords
+    pos = " ".join(review for review in positive.non_english)
+    wordcloud2 = WordCloud(stopwords=stopwords).generate(pos)
+    plt.imshow(wordcloud2, interpolation='bilinear')
+    plt.axis("off")
+    plt.savefig('wordcloud12.png')
+    p_plot = plt.show()
+
+    #negative stopwords
+    neg = " ".join(review for review in negative.non_english)
+    wordcloud2 = WordCloud(stopwords=stopwords).generate(neg)
+    plt.imshow(wordcloud2, interpolation='bilinear')
+    plt.axis("off")
+    plt.savefig('wordcloud13.png')
+    p_plot = plt.show()
+
+
+    #Application Score
+    fig = px.histogram(df, x="score")
+    fig.update_traces(marker_color="turquoise",marker_line_color='rgb(8,48,107)',
+                  marker_line_width=0)
+    fig.update_layout(width=800,height=500,title_text='Application Score')
+
+
+    # Negative Postive Review
+    df['sentimentt'] = df['sentiment'].replace({-1 : 'negative'})
+    df['sentimentt'] = df['sentimentt'].replace({1 : 'positive'})
+    fig_2 = px.histogram(df, x="sentimentt")
+    fig_2.update_traces(marker_color="indianred",marker_line_color='rgb(8,48,107)',
+                  marker_line_width=1.5)
+    fig_2.update_layout(width=800,height=500,title_text='Application Sentiment')
+    index = df.index
+    df['random_number'] = np.random.randn(len(index))
+    
+    #Training and Testing
+    train = df[df['random_number'] <= 0.8]
+    test = df[df['random_number'] > 0.8]
+    vectorizer = CountVectorizer(token_pattern=r'\b\w+\b')
+    train_matrix = vectorizer.fit_transform(train['single_character'])
+    test_matrix = vectorizer.transform(test['single_character'])
+    X_train = train_matrix
+    X_test = test_matrix
+    y_train = train['sentiment']
+    y_test = test['sentiment']
+    lr.fit(X_train,y_train)
+    predictions = lr.predict(X_test)
+
+    new = np.asarray(y_test)
+    cm=confusion_matrix(predictions,y_test)
+    cmr =classification_report(predictions,y_test)
     st.write(df)
+    st.write(fig)
+    # st.write(sw_plot)
+    # st.write(p_plot)
+    st.write(fig_2)
+    st.write(cm)
+    st.write(cmr)
+    
 bank_dict = {"UBL": "app.com.brd", "ABL": "com.ofss.digx.mobile.android.allied",
              "AlBaraka":"pk.com.albaraka.mobileapp","Alfalah":"com.base.bankalfalah","Askari":"com.askari", "Bank Al-Habib":"com.ofss.digx.mobile.obdx.bahl",
              "Bank of Khyber":"com.temenos.bok","Bank of Punjab":"com.paysys.nbpdigital","Dubai Islamic Bank":"com.avanza.ambitwizdib","EasyPaisa":"pk.com.telenor.phoenix",
