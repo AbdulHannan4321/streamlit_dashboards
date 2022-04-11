@@ -27,5 +27,7 @@ def app_review(x):
     df = df.join(pd.DataFrame(df.pop('review').tolist()))
     # st.write(df.head())
 
-review=.selectbox("Select Bank?", options=[""])
+
+st.selectbox("Select Bank", ("HBL","ABL","UBL"), index=0, format_func=app_review, on_change=None)
+
 
