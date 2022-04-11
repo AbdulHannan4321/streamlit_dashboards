@@ -6,5 +6,4 @@ nltk
 string
 numpy
 pandas
-nltk.download('stopwords')
 nltk.tokenize

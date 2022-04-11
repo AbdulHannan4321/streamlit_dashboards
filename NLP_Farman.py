@@ -13,10 +13,13 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
-# import re
+import re
 # import unicodedata
 # import unidecode
 import string
+from nltk.stem import WordNetLemmatizer
+ 
+lemmatizer = WordNetLemmatizer()
 
 
 
